@@ -18,12 +18,12 @@ package object expr {
   case object True extends Exp
   case object False extends Exp
   case class Cons(head: Exp, tail: Exp) extends Exp
-  case class Car(cons: Cons) extends Exp
-  case class Cdr(cons: Cons) extends Exp
-  case class Pair(exp: Exp) extends Exp
+  case class Car(cons: Exp) extends Exp
+  case class Cdr(cons: Exp) extends Exp
+  case class PairEh(exp: Exp) extends Exp
   case object Null extends Exp
   case class NullEh(exp: Exp) extends Exp
-  case class Quote(exp: Exp) extends Exp
+  case class Quote(exp: SExp) extends Exp
   case class Lambda(params: List[String], body: Exp) extends Exp
 
   case class Def(name: String, params: List[String], body: Exp)
@@ -34,6 +34,7 @@ package object expr {
       case SInt(v) => Literal(v)
       case STrue() => True
       case SFalse() => False
+      case SSymbol("null") => Null
       case SList(SSymbol("+"), l, r) => Add(parseExp(l), parseExp(r))
       case SList(SSymbol("*"), l, r) => Multiply(parseExp(l), parseExp(r))
       case SList(SSymbol("-"), l, r) => Subtract(parseExp(l), parseExp(r))
@@ -46,6 +47,12 @@ package object expr {
         defs,
         body) => parseLet(defs, body, List())
       case SCons(SSymbol(id), args) => parseCall(args, id, List())
+      case SList(SSymbol("cons"), l, r) => Cons(parseExp(l), parseExp(r))
+      case SList(SSymbol("car"), exp) => Car(parseExp(exp))
+      case SList(SSymbol("cdr"), exp) => Cdr(parseExp(exp))
+      case SList(SSymbol("pair?"), exp) => PairEh(parseExp(exp))
+      case SList(SSymbol("null?"), exp) => NullEh(parseExp(exp))
+      case SList(SSymbol("quote"), exp) => Quote(exp)
       case SList(SSymbol("lambda"), params, body) => parseLambda(params, body, List())
       case _ => throw new IllegalArgumentException("Not a valid arithmetic expression: " + e)
     }
@@ -105,6 +112,31 @@ package object expr {
       case Literal(v) => SInt(v)
       case True => STrue()
       case False => SFalse()
+      case Null => SNil
+      case Cons(head, tail) => SCons(interpExp(head, env), interpExp(tail, env))
+      case Quote(sexp) => sexp
+      case Car(exp) => interpExp(exp, env) match {
+        case SCons(head, tail) => head
+        case _ =>
+          throw new UnsupportedOperationException(
+            "Car is not supported for type " + exp.getClass.getName
+          )
+      }
+      case Cdr(exp) => interpExp(exp, env) match {
+        case SCons(head, tail) => tail
+        case _ =>
+          throw new UnsupportedOperationException(
+            "Cdr is not supported for types " + exp.getClass.getName
+          )
+      }
+      case PairEh(exp) => interpExp(exp, env) match {
+        case SCons(head, tail) => STrue()
+        case _ => SFalse()
+      }
+      case NullEh(exp) => interpExp(exp, env) match {
+        case SNil => STrue()
+        case _ => SFalse()
+      }
       case Add(l, r) => (interpExp(l, env), interpExp(r, env)) match {
         case (SInt(lv), SInt(rv)) => SInt(lv + rv)
         case _ =>

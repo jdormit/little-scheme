@@ -176,5 +176,50 @@ object testExpr {
 
     assert(interpProgram(progEx7, Map()) == SInt(4))
 
+    val progEx8 = parseProgram(parseSExp(
+      """
+      (
+        (define 
+          (append l s)
+          (if (null? l)
+            s
+            (cons (car l) (append (cdr l) s))
+          )
+        )
+        (append (quote (1 2 3)) (quote (4 5 6)))
+      )
+      """))
+
+    assert(progEx8 ==
+      Program(
+        List(
+          Def(
+            "append",
+            List("l", "s"),
+            If(
+              NullEh(Ref("l")),
+              Ref("s"),
+              Cons(
+                Car(Ref("l")),
+                Call(
+                  "append",
+                  List(Cdr(Ref("l")) , Ref("s"))
+                )
+              )
+            )
+          )
+        ),
+        Call(
+          "append",
+          List(
+            Quote(SList(SInt(1), SInt(2), SInt(3))),
+            Quote(SList(SInt(4), SInt(5), SInt(6)))
+          )
+        )
+      )
+    )
+
+    assert(interpProgram(progEx8, Map()) == SList(SInt(1), SInt(2), SInt(3), SInt(4), SInt(5), SInt(6)))
+
   }
 }
