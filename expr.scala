@@ -46,7 +46,6 @@ package object expr {
         SSymbol("let"),
         defs,
         body) => parseLet(defs, body, List())
-      case SCons(SSymbol(id), args) => parseCall(args, id, List())
       case SList(SSymbol("cons"), l, r) => Cons(parseExp(l), parseExp(r))
       case SList(SSymbol("car"), exp) => Car(parseExp(exp))
       case SList(SSymbol("cdr"), exp) => Cdr(parseExp(exp))
@@ -54,6 +53,7 @@ package object expr {
       case SList(SSymbol("null?"), exp) => NullEh(parseExp(exp))
       case SList(SSymbol("quote"), exp) => Quote(exp)
       case SList(SSymbol("lambda"), params, body) => parseLambda(params, body, List())
+      case SCons(SSymbol(id), args) => parseCall(args, id, List())
       case _ => throw new IllegalArgumentException("Not a valid arithmetic expression: " + e)
     }
 
