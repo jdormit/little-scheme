@@ -2,7 +2,7 @@ import io._
 import expr._
 import java.io._
 
-object scheme {
+object schemeInterpreter {
   def main(args: Array[String]): Unit = {
     if (args.length == 0) {
       System.err.println("USAGE: scheme FILE")
