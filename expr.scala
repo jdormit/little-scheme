@@ -194,7 +194,7 @@ package object expr {
           interpExp(body, mapArgsToEnv(params zip args, env))
         case Some(v) => throw new RuntimeException(v + " is not a function")
       }
-      case Lambda(params, body) => ???
+      case Lambda(params, body) => SFunc(params, body)
     }
 
   def checkEqualEh(l: Exp, r: Exp, env: Env): SExp =

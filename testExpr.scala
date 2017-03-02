@@ -221,5 +221,24 @@ object testExpr {
 
     assert(interpProgram(progEx8, Map()) == SList(SInt(1), SInt(2), SInt(3), SInt(4), SInt(5), SInt(6)))
 
+    val progEx9 = parseProgram(parseSExp(
+      """
+      (
+      (let ((f (lambda (x y) (+ x y)))) (f 1 2))
+      )
+      """))
+
+    assert(progEx9 ==
+      Program(
+        List(),
+        Let(
+          List(Var("f", Lambda(List("x", "y"), Add(Ref("x"), Ref("y"))))),
+          Call("f", List(Literal(1), Literal(2)))
+        )
+      )
+    )
+
+    assert(interpProgram(progEx9, Map()) == SInt(3))
+
   }
 }
