@@ -16,4 +16,49 @@
             )
         )
     )
+
+    (define
+        (length l acc)
+        (if (null? l)
+            acc
+            (length (cdr l) (+ acc 1))
+        )
+    )
+
+    (define 
+        (splitList l low high acc)
+        (if (> acc high)
+            null 
+            (if (< acc low)
+                (splitList (cdr l) low high (+ acc 1))
+                (cons (car l) (splitList (cdr l) low high (+ acc 1)) )
+
+            ) 
+        )
+    )
+
+    (define
+        (merge l r s)
+        (if (null? l)
+            (if (null? r)
+                s
+                (merge null null (append s r))
+            )
+            (if (null? r)
+                (merge null null (append s l))
+                (if (< (car l) (car r))
+                    (merge (cdr 1) r (append s (cons (car l) null)))
+                    (merge l (cdr r) (append s (cons (car r) null)))
+                )
+            )
+        )
+    )
+
+    (define
+        (append l s)
+        (if (null? l)
+            s
+            (cons (car l) (append (cdr l) s))
+        ) 
+    )
 )
