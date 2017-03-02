@@ -225,41 +225,4 @@ package object expr {
   def evalExp(s: String) : SExp = interpExp(parseExp(parseSExp(s)), Map())
 
   def evalProgram(s: String) : SExp = interpProgram(parseProgram(parseSExp(s)), Map())
-
-  """
-  Example Expressions
-  -------------------
-
-  (let ( (x 4) (y 2) ) (+ x y))
-  // => 6
-  """
-
-  """
-  Example Programs
-  --------
-  ((define (square n)
-     (* n n))
-     (square 5))
-  // => 25
-
-  (
-    (define (square n) (* n n))
-    (define (cube n) (* n (square n)))
-    (cube 5)
-  )
-  // => 125
-
-  (
-    (define (square n) (* n n))
-    (define (reverse n) (* n -1))
-    (+ 
-      (let ((x 4)) (square x))
-      (reverse 3)
-    )
-  )
-  // => 13
-
-  A program data structure:
-  Program(List(Def("Square", "n", Multiply(Ref("n"), Ref("n"))))
-  """
 }
