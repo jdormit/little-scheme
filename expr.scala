@@ -9,6 +9,10 @@ package object expr {
   case class Subtract(lhs: Exp, rhs: Exp) extends Exp
   case class Multiply(lhs: Exp, rhs: Exp) extends Exp
   case class Divide(lhs: Exp, rhs: Exp) extends Exp
+  case class GreaterThan(lhs:Exp, rhs:Exp) extends Exp
+  case class LessThan(lhs:Exp, rhs:Exp) extends Exp
+  case class GreaterOrEqual(lhs:Exp, rhs:Exp) extends Exp
+  case class LessOrEqual(lhs:Exp, rhs:Exp) extends Exp
   case class Var(name: String, exp: Exp)
   case class Let(vars: List[Var], body: Exp) extends Exp
   case class Ref(v: String) extends Exp
@@ -39,6 +43,10 @@ package object expr {
       case SList(SSymbol("*"), l, r) => Multiply(parseExp(l), parseExp(r))
       case SList(SSymbol("-"), l, r) => Subtract(parseExp(l), parseExp(r))
       case SList(SSymbol("/"), l, r) => Divide(parseExp(l), parseExp(r))
+      case SList(SSymbol(">"), l, r) => GreaterThan(parseExp(l), parseExp(r))
+      case SList(SSymbol("<"), l, r) => LessThan(parseExp(l), parseExp(r))
+      case SList(SSymbol(">="), l, r) => GreaterOrEqual(parseExp(l), parseExp(r))
+      case SList(SSymbol("<="), l, r) => LessOrEqual(parseExp(l), parseExp(r))
       case SList(SSymbol("if"), cond, l, r) => If(parseExp(cond), parseExp(l), parseExp(r))
       case SList(SSymbol("equal?"), l, r) => EqualEh(parseExp(l), parseExp(r))
       case SSymbol(id) => Ref(id)
@@ -150,7 +158,7 @@ package object expr {
         case (SInt(lv), SInt(rv)) => SInt(lv - rv)
         case _ =>
           throw new UnsupportedOperationException(
-            "Addition is not supported for types " +
+            "Subtraction is not supported for types " +
               l.getClass.getName + " and " +
               r.getClass.getName
           )
@@ -168,7 +176,55 @@ package object expr {
         case (SInt(lv), SInt(rv)) => SInt(lv / rv)
         case _ =>
           throw new UnsupportedOperationException(
-            "Addition is not supported for types " +
+            "Divide is not supported for types " +
+              l.getClass.getName + " and " +
+              r.getClass.getName
+          )
+      }
+      case GreaterThan(l, r) => (interpExp(l, env), interpExp(r, env)) match {
+        case (SInt(lv), SInt(rv)) => lv > rv match {
+          case true => STrue()
+          case false => SFalse()
+        }
+        case _ =>
+          throw new UnsupportedOperationException(
+            "GreaterThan is not supported for types " +
+              l.getClass.getName + " and " +
+              r.getClass.getName
+          )
+      }      
+      case LessThan(l, r) => (interpExp(l, env), interpExp(r, env)) match {
+        case (SInt(lv), SInt(rv)) => lv < rv match {
+          case true => STrue()
+          case false => SFalse()
+        }
+        case _ =>
+          throw new UnsupportedOperationException(
+            "LessThan is not supported for types " +
+              l.getClass.getName + " and " +
+              r.getClass.getName
+          )
+      }      
+      case GreaterOrEqual(l, r) => (interpExp(l, env), interpExp(r, env)) match {
+        case (SInt(lv), SInt(rv)) => lv >= rv match {
+          case true => STrue()
+          case false => SFalse()
+        }
+        case _ =>
+          throw new UnsupportedOperationException(
+            "GreaterOrEqual is not supported for types " +
+              l.getClass.getName + " and " +
+              r.getClass.getName
+          )
+      }      
+      case LessOrEqual(l, r) => (interpExp(l, env), interpExp(r, env)) match {
+        case (SInt(lv), SInt(rv)) => lv <= rv match {
+          case true => STrue()
+          case false => SFalse()
+        }
+        case _ =>
+          throw new UnsupportedOperationException(
+            "LessOrEqual is not supported for types " +
               l.getClass.getName + " and " +
               r.getClass.getName
           )
