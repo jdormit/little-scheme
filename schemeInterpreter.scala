@@ -1,4 +1,5 @@
 import io._
+import sexp._
 import expr._
 import java.io._
 import java.nio.file.{Paths, Files}
@@ -33,10 +34,36 @@ object schemeInterpreter {
           var line = ""
           val out = new PrintWriter(reader.getOutput());
 
-          while ((line = reader.readLine()) != null) {
-            out.println("Echo: " + line);
-            out.flush();
+          def appendProgramToEnv(p: Program, env: Env): Env = {
+            p.defs match {
+              case Nil => {
+                env
+              }
+              case first :: rest => appendProgramToEnv(
+                Program(rest, p.exp),
+                env + (first.name -> SFunc(first.params, first.body)))
+            }
           }
+
+          def replLoop(line: String, replEnv: Env): Unit = {
+            try {
+              val sexp = parseSExp("(" + line + ")")
+              val prog = parseProgram(sexp)
+              val res = interpProgram(prog, replEnv)
+              out.println(res)
+              out.flush()
+              replLoop(reader.readLine(), appendProgramToEnv(prog, replEnv))
+            }
+            catch {
+              case e: Exception => {
+                out.println(e)
+                replLoop(reader.readLine(), replEnv)
+              }
+            }
+          }
+
+          replLoop(reader.readLine(), Map())
+
         }
       }
       else if (Files.exists(Paths.get(args(0)))) {
