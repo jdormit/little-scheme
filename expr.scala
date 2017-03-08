@@ -113,6 +113,8 @@ package object expr {
         case exp: SCons => Program(defs.reverse, parseExp(exp))
         case _ => throw new IllegalArgumentException("Not a valid program: " + e)
       }
+      // The program's expression could be empty
+      case SNil => Program(defs.reverse, Null)
     }
 
   type Env = Map[String, SExp]
