@@ -1,2 +1,3 @@
 #!/usr/bin/env bash
-scala schemeInterpreter $*
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+scala -cp "$DIR":"$DIR"/jline.jar schemeInterpreter $*
