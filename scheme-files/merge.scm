@@ -4,14 +4,14 @@
         (if (null? l)
             null
             (if (null? (cdr l))
-                (merge (null null l))
+                (merge null null l)
                 (let 
                     (
                         (middle (/ (- (length l 0) 1) 2)) 
                         (left (splitList l 0 middle 0))
                         (right (splitList l (+ middle 1) (- (length l 0) 1) 0))
                     )
-                    (merge ((mergeSort left) (mergeSort right) null))
+                    (merge (mergeSort left) (mergeSort right) null)
                 )
             )
         )
@@ -61,4 +61,6 @@
             (cons (car l) (append (cdr l) s))
         ) 
     )
+
+    (mergeSort (quote (2 8 4 1 10)))
 )
