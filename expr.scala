@@ -127,6 +127,7 @@ package object expr {
       case Quote(sexp) => sexp
       case Car(exp) => interpExp(exp, env) match {
         case SCons(head, tail) => head
+        case SNil => SNil
         case _ =>
           throw new UnsupportedOperationException(
             "Car is not supported for type " + exp.getClass.getName
@@ -134,6 +135,7 @@ package object expr {
       }
       case Cdr(exp) => interpExp(exp, env) match {
         case SCons(head, tail) => tail
+        case SNil => SNil
         case _ =>
           throw new UnsupportedOperationException(
             "Cdr is not supported for types " + exp.getClass.getName
