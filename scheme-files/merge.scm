@@ -1,66 +1,70 @@
 (
-    (define 
-        (mergeSort l) 
-        (if (null? l)
-            null
-            (if (null? (cdr l))
-                (merge null null l)
-                (let 
-                    (
-                        (middle (/ (- (length l 0) 1) 2)) 
-                        (left (splitList l 0 middle 0))
-                        (right (splitList l (+ middle 1) (- (length l 0) 1) 0))
-                    )
-                    (merge (mergeSort left) (mergeSort right) null)
+ (define 
+   (mergeSort l1) 
+   (if (null? l1)
+       null
+       (if (null? (cdr l1))
+           (merge null null l1)
+           (let 
+               (
+                (middle (/ (- (length l1 0) 1) 2)) 
+                (left (splitList l1 0 middle 0))
+                (right (splitList l1 (+ middle 1) (- (length l1 0) 1) 0))
                 )
-            )
-        )
-    )
+             (merge (mergeSort left) (mergeSort right) null)
+             )
+           )
+       )
+   )
 
-    (define
-        (length l acc)
-        (if (null? l)
-            acc
-            (length (cdr l) (+ acc 1))
-        )
-    )
+ (define
+   (length l2 acc1)
+   (if (null? l2)
+       acc1
+       (length (cdr l2) (+ acc1 1))
+       )
+   )
 
-    (define 
-        (splitList l low high acc)
-        (if (> acc high)
-            null 
-            (if (< acc low)
-                (splitList (cdr l) low high (+ acc 1))
-                (cons (car l) (splitList (cdr l) low high (+ acc 1)) )
+ (define 
+   (splitList l3 low high acc2)
+   (if (> acc2 high)
+       null 
+       (if (< acc2 low)
+           (splitList (cdr l3) low high (+ acc2 1))
+           (cons (car l3) (splitList (cdr l3) low high (+ acc2 1)) )
 
-            ) 
-        )
-    )
+           ) 
+       )
+   )
 
-    (define
-        (merge l r s)
-        (if (null? l)
-            (if (null? r)
-                s
-                (merge null null (append s r))
-            )
-            (if (null? r)
-                (merge null null (append s l))
-                (if (< (car l) (car r))
-                    (merge (cdr 1) r (append s (cons (car l) null)))
-                    (merge l (cdr r) (append s (cons (car r) null)))
-                )
-            )
-        )
-    )
+ (define
+   (merge left right result)
+   (if (null? left)
+       (if (null? right)
+           result
+           (let ((newRes (append result right))) (merge null null newRes))
+           )
+       (if (null? right)
+           (let ((newRes1 (append result left))) (merge null null newRes1))
+           (if (< (car left) (car right))
+               (let ((newRes2 (append result (cons (car left) null))))
+                 (merge (cdr left) right newRes2)
+                 )
+               (let ((newRes3 (append result (cons (car right) null))))
+                 (merge left (cdr right) newRes3)
+                 )
+               )
+           )
+       )
+   )
 
-    (define
-        (append l s)
-        (if (null? l)
-            s
-            (cons (car l) (append (cdr l) s))
-        ) 
-    )
+ (define
+   (append l5 s)
+   (if (null? l5)
+       s
+       (cons (car l5) (append (cdr l5) s))
+       ) 
+   )
 
-    (mergeSort (quote (2 8 4 1 10)))
-)
+ (mergeSort (quote (2 8 4 1 10)))
+ )
