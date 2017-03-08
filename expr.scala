@@ -29,6 +29,7 @@ package object expr {
   case class NullEh(exp: Exp) extends Exp
   case class Quote(exp: SExp) extends Exp
   case class Lambda(params: List[String], body: Exp) extends Exp
+  case class Print(exp: Exp) extends Exp
 
   case class Def(name: String, params: List[String], body: Exp)
   case class Program(defs: List[Def], exp: Exp)
@@ -60,6 +61,7 @@ package object expr {
       case SList(SSymbol("pair?"), exp) => PairEh(parseExp(exp))
       case SList(SSymbol("null?"), exp) => NullEh(parseExp(exp))
       case SList(SSymbol("quote"), exp) => Quote(exp)
+      case SList(SSymbol("print"), exp) => Print(parseExp(exp))
       case SList(SSymbol("lambda"), params, body) => parseLambda(params, body, List())
       case SCons(SSymbol(id), args) => parseCall(args, id, List())
       case _ => throw new IllegalArgumentException("Not a valid arithmetic expression: " + e)
@@ -251,6 +253,11 @@ package object expr {
         case Some(v) => throw new RuntimeException(v + " is not a function")
       }
       case Lambda(params, body) => SFunc(params, body)
+      case Print(exp) => {
+        val res = interpExp(exp, env)
+        println(res)
+        SNil
+      }
     }
 
   def checkEqualEh(l: Exp, r: Exp, env: Env): SExp =
