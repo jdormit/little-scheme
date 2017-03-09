@@ -1,7 +1,8 @@
 import sexp._
 
 package object expr {
-  case class SFunc(params: List[String], body: Exp) extends SExp
+  type Env = Map[String, SExp]
+  case class SFunc(params: List[String], body: Exp, env: Env) extends SExp
 
   sealed abstract class Exp
   case class Literal(v: Int) extends Exp
@@ -16,7 +17,7 @@ package object expr {
   case class Var(name: String, exp: Exp)
   case class Let(vars: List[Var], body: Exp) extends Exp
   case class Ref(v: String) extends Exp
-  case class Call(name: String, args: List[Exp]) extends Exp
+  case class Call(name: Exp, args: List[Exp]) extends Exp
   case class If(condition: Exp, lhs: Exp, rhs: Exp) extends Exp
   case class EqualEh(lhs: Exp, rhs: Exp) extends Exp
   case object True extends Exp
@@ -63,7 +64,7 @@ package object expr {
       case SList(SSymbol("quote"), exp) => Quote(exp)
       case SList(SSymbol("print"), exp) => Print(parseExp(exp))
       case SList(SSymbol("lambda"), params, body) => parseLambda(params, body, List())
-      case SCons(SSymbol(id), args) => parseCall(args, id, List())
+      case SCons(id, args) => parseCall(args, parseExp(id), List())
       case _ => throw new IllegalArgumentException("Not a valid arithmetic expression: " + e)
     }
 
@@ -75,7 +76,7 @@ package object expr {
       case SCons(SSymbol(param), rest) => parseLambda(rest, body, param :: acc)
     }
 
-  def parseCall(args: SExp, id: String, acc: List[Exp]) : Call =
+  def parseCall(args: SExp, id: Exp, acc: List[Exp]) : Call =
     args match {
       case SNil => Call(id, acc.reverse)
       case SCons(first, rest) => parseCall(rest, id, parseExp(first) :: acc)
@@ -116,8 +117,6 @@ package object expr {
       // The program's expression could be empty
       case SNil => Program(defs.reverse, Null)
     }
-
-  type Env = Map[String, SExp]
 
   def interpExp(e: Exp, env: Env) : SExp =
     e match {
@@ -250,13 +249,25 @@ package object expr {
         case first :: rest =>
           interpExp(Let(rest, body), env + (first.name -> interpExp(first.exp, env)))
       }
-      case Call(name, args) => env.get(name) match {
-        case None => throw new RuntimeException("Undefined function " + name)
-        case Some(SFunc(params, body)) =>
-          interpExp(body, mapArgsToEnv(params zip args, env))
-        case Some(v) => throw new RuntimeException(v + " is not a function")
-      }
-      case Lambda(params, body) => SFunc(params, body)
+      case Call(name, args) =>
+        name match {
+          case Ref(name) => env.get(name) match {
+            case None => throw new RuntimeException("Undefined function " + name)
+            case Some(SFunc(params, body, closure)) =>
+              interpExp(body, mapArgsToEnv(params zip args, env ++ closure))
+            case Some(v) => throw new RuntimeException(v + " is not a function")
+          }
+          case Lambda(params, body) => interpExp(Lambda(params, body), env) match {
+            case SFunc(params, body, closure) =>
+              interpExp(body, mapArgsToEnv(params zip args, env ++ closure))
+          }
+          case exp: Exp => interpExp(exp, env) match {
+            case SFunc(params, body, closure) =>
+              interpExp(body, mapArgsToEnv(params zip args, env ++ closure))
+            case _ => throw new RuntimeException(exp + " is not a valid function id")
+          }
+        }
+      case Lambda(params, body) => SFunc(params, body, env)
       case Print(exp) => {
         val res = interpExp(exp, env)
         println(res)
@@ -266,9 +277,7 @@ package object expr {
 
   def checkEqualEh(l: Exp, r: Exp, env: Env): SExp =
     (interpExp(l, env), interpExp(r, env)) match {
-      case (SFunc(lparams, lbody), SFunc(rparams, rbody)) =>
-        // If the parameters are the same, return checkEqualEh of the bodies
-        if (lparams == rparams) checkEqualEh(lbody, rbody, env) else SFalse()
+      case (l: SFunc, r: SFunc) => throw new RuntimeException("Cannot compare functions")
       case (l: SExp, r: SExp) => if (l == r) STrue() else SFalse()
       case _ => throw new RuntimeException("Unknown type")
     }
@@ -286,7 +295,7 @@ package object expr {
       case Nil => interpExp(p.exp, env)
       case first :: rest => interpProgram(
         Program(rest, p.exp),
-        env + (first.name -> SFunc(first.params, first.body)))
+        env + (first.name -> SFunc(first.params, first.body, Map())))
     }
 
   def evalExp(s: String) : SExp = interpExp(parseExp(parseSExp(s)), Map())
