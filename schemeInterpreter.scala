@@ -41,7 +41,7 @@ object schemeInterpreter {
               }
               case first :: rest => appendProgramToEnv(
                 Program(rest, p.exp),
-                env + (first.name -> SFunc(first.params, first.body)))
+                env + (first.name -> SFunc(first.params, first.body, env)))
             }
           }
 
