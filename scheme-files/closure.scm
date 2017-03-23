@@ -1,0 +1,5 @@
+((define (myf arg)
+   (+ arg 1))
+ (define (apply f)
+   (f 4))
+  (apply myf))
