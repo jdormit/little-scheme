@@ -41,7 +41,7 @@ object testExpr {
       Program(List(
         Def("square", List("n"), Multiply(Ref("n"), Ref("n")))
       ),
-        Call("square", List(Literal(5))))
+        Call(Ref("square"), List(Literal(5))))
     )
 
     assert(interpProgram(progEx1, Map()) == SInt(25))
@@ -58,9 +58,9 @@ object testExpr {
     assert(progEx2 ==
       Program(List(
         Def("square", List("n"), Multiply(Ref("n"), Ref("n"))),
-        Def("cube", List("n"), Multiply(Ref("n"), Call("square", List(Ref("n")))))
+        Def("cube", List("n"), Multiply(Ref("n"), Call(Ref("square"), List(Ref("n")))))
       ),
-        Call("cube", List(Literal(5))))
+        Call(Ref("cube"), List(Literal(5))))
     )
 
     assert(interpProgram(progEx2, Map()) == SInt(125))
@@ -76,7 +76,7 @@ object testExpr {
       Program(List(
         Def("add", List("x", "y"), Add(Ref("x"), Ref("y")))
       ),
-        Call("add", List(Literal(5), Literal(6))))
+        Call(Ref("add"), List(Literal(5), Literal(6))))
     )
 
     assert(interpProgram(progEx3, Map()) == SInt(11))
@@ -93,7 +93,7 @@ object testExpr {
     assert(progEx4 ==
       Program(List(
         Def("two", List(), Literal(2))
-      ), Add(Call("two", List()), Literal(1)))
+      ), Add(Call(Ref("two"), List()), Literal(1)))
     )
 
     assert(interpProgram(progEx4, Map()) == SInt(3))
@@ -132,15 +132,15 @@ object testExpr {
           Def(
             "even?",
             List("n"),
-            If(EqualEh(Ref("n"), Literal(0)), True, Call("odd?", List(Subtract(Ref("n"), Literal(1)))))
+            If(EqualEh(Ref("n"), Literal(0)), True, Call(Ref("odd?"), List(Subtract(Ref("n"), Literal(1)))))
           ),
           Def(
             "odd?",
             List("n"),
-            If(EqualEh(Ref("n"), Literal(0)), False, Call("even?", List(Subtract(Ref("n"), Literal(1)))))
+            If(EqualEh(Ref("n"), Literal(0)), False, Call(Ref("even?"), List(Subtract(Ref("n"), Literal(1)))))
           )
         ),
-        Call("even?", List(Literal(10)))
+        Call(Ref("even?"), List(Literal(10)))
       )
     )
 
@@ -167,10 +167,10 @@ object testExpr {
           Def(
             "callFuncWith2",
             List("func"),
-            Call("func", List(Literal(2)))
+            Call(Ref("func"), List(Literal(2)))
           )
         ),
-        Call("callFuncWith2", List(Ref("square")))
+        Call(Ref("callFuncWith2"), List(Ref("square")))
       )
     )
 
@@ -202,7 +202,7 @@ object testExpr {
               Cons(
                 Car(Ref("l")),
                 Call(
-                  "append",
+                  Ref("append"),
                   List(Cdr(Ref("l")) , Ref("s"))
                 )
               )
@@ -210,7 +210,7 @@ object testExpr {
           )
         ),
         Call(
-          "append",
+          Ref("append"),
           List(
             Quote(SList(SInt(1), SInt(2), SInt(3))),
             Quote(SList(SInt(4), SInt(5), SInt(6)))
@@ -233,7 +233,7 @@ object testExpr {
         List(),
         Let(
           List(Var("f", Lambda(List("x", "y"), Add(Ref("x"), Ref("y"))))),
-          Call("f", List(Literal(1), Literal(2)))
+          Call(Ref("f"), List(Literal(1), Literal(2)))
         )
       )
     )
