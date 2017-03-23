@@ -240,5 +240,26 @@ object testExpr {
 
     assert(interpProgram(progEx9, Map()) == SInt(3))
 
+
+    val progEx10 = parseProgram(parseSExp(
+      """
+      ((define (myf arg)
+         (+ arg 1))
+       (define (apply f)
+         (f 4))
+       (apply myf))
+      """))
+
+    assert(progEx10 ==
+      Program(
+        List(
+          Def("myf", List("arg"), Add(Ref("arg"), Literal(1))),
+          Def("apply", List("f"), Call(Ref("f"), List(Literal(4))))
+        ),
+        Call(Ref("apply"), List(Ref("myf")))
+      )
+    )
+    
+    assert(interpProgram(progEx10, Map()) == SInt(5))
   }
 }
