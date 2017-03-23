@@ -254,16 +254,16 @@ package object expr {
           case Ref(name) => env.get(name) match {
             case None => throw new RuntimeException("Undefined function " + name)
             case Some(SFunc(params, body, closure)) =>
-              interpExp(body, mapArgsToEnv(params zip args, env ++ closure))
+              interpExp(body, mapArgsToEnv(params zip args, closure, env))
             case Some(v) => throw new RuntimeException(v + " is not a function")
           }
           case Lambda(params, body) => interpExp(Lambda(params, body), env) match {
             case SFunc(params, body, closure) =>
-              interpExp(body, mapArgsToEnv(params zip args, env ++ closure))
+              interpExp(body, mapArgsToEnv(params zip args, closure, env))
           }
           case exp: Exp => interpExp(exp, env) match {
             case SFunc(params, body, closure) =>
-              interpExp(body, mapArgsToEnv(params zip args, env ++ closure))
+              interpExp(body, mapArgsToEnv(params zip args, closure, env))
             case _ => throw new RuntimeException(exp + " is not a valid function id")
           }
         }
@@ -283,11 +283,11 @@ package object expr {
     }
 
   // TODO inline this to a foldLeft above
-  def mapArgsToEnv(paramToArgs: List[(String, Exp)], acc: Env) : Env =
+  def mapArgsToEnv(paramToArgs: List[(String, Exp)], acc: Env, env: Env) : Env =
     paramToArgs match {
       case Nil => acc
       case first :: rest =>
-        mapArgsToEnv(rest, acc + (first._1 -> interpExp(first._2, acc)))
+        mapArgsToEnv(rest, acc + (first._1 -> interpExp(first._2, env)), env)
     }
 
   def interpProgram(p: Program, env: Env) : SExp =
