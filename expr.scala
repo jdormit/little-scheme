@@ -1,7 +1,9 @@
 import sexp._
 
 package object expr {
-  type Env = Map[String, SExp]
+  class Box[A](var contents : Option[A] = None)
+
+  type Env = Map[String, Box[SExp]]
   case class SFunc(params: List[String], body: Exp, env: Env) extends SExp
 
   sealed abstract class Exp
@@ -242,20 +244,26 @@ package object expr {
       case EqualEh(l, r) => checkEqualEh(l, r, env)
       case Ref(id) => env.get(id) match {
         case None => throw new RuntimeException("Unbound variable " + id)
-        case Some(v) => v
+        case Some(v) => v.contents match {
+          case None => throw new RuntimeException("Unbound variable " + id)
+          case Some(v) => v
+        }
       }
       case Let(vars, body) => vars match {
         case Nil => interpExp(body, env)
         case first :: rest =>
-          interpExp(Let(rest, body), env + (first.name -> interpExp(first.exp, env)))
+          interpExp(Let(rest, body), env + (first.name -> new Box(Some(interpExp(first.exp, env)))))
       }
       case Call(name, args) =>
         name match {
           case Ref(name) => env.get(name) match {
             case None => throw new RuntimeException("Undefined function " + name)
-            case Some(SFunc(params, body, closure)) =>
-              interpExp(body, mapArgsToEnv(params zip args, closure, env))
-            case Some(v) => throw new RuntimeException(v + " is not a function")
+            case Some(v) => v.contents match {
+              case None => throw new RuntimeException("Undefined function " + name)
+              case Some(SFunc(params, body, closure)) =>
+                interpExp(body, mapArgsToEnv(params zip args, closure, env))
+              case Some(v) => throw new RuntimeException(v + " is not a function")
+            }
           }
           case Lambda(params, body) => interpExp(Lambda(params, body), env) match {
             case SFunc(params, body, closure) =>
@@ -287,16 +295,40 @@ package object expr {
     paramToArgs match {
       case Nil => acc
       case first :: rest =>
-        mapArgsToEnv(rest, acc + (first._1 -> interpExp(first._2, env)), env)
+        mapArgsToEnv(rest, acc + (first._1 -> new Box(Some(interpExp(first._2, env)))), env)
     }
 
-  def interpProgram(p: Program, env: Env) : SExp =
+  def initFuncs(p: Program, env: Env) : Env =
+    p.defs match {
+      case Nil => env
+      case first :: rest => initFuncs(
+        Program(rest, p.exp),
+        env + (first.name -> new Box()))
+    }
+
+  def defineFuncs(p: Program, env: Env) : Env = {
+    p.defs.foreach { defItem =>
+      env.get(defItem.name) match {
+        case None => throw new RuntimeException("This shouldn't happen")
+        case Some(v) => v.contents = Some(SFunc(defItem.params, defItem.body, env))
+      }
+    }
+    env
+  }
+
+  def runProgram(p: Program, env: Env) : SExp =
     p.defs match {
       case Nil => interpExp(p.exp, env)
-      case first :: rest => interpProgram(
-        Program(rest, p.exp),
-        env + (first.name -> SFunc(first.params, first.body, Map())))
+      case first :: rest =>
+        runProgram(
+          Program(rest, p.exp),
+          env + (first.name -> new Box(Some(SFunc(first.params, first.body, env))))
+        )
     }
+
+  def interpProgram(p: Program, env: Env) : SExp = {
+    runProgram(p, defineFuncs(p, initFuncs(p, env)))
+  }
 
   def evalExp(s: String) : SExp = interpExp(parseExp(parseSExp(s)), Map())
 
