@@ -41,12 +41,16 @@ object schemeInterpreter {
               }
               case first :: rest => appendProgramToEnv(
                 Program(rest, p.exp),
-                env + (first.name -> SFunc(first.params, first.body, env)))
+                env + (first.name -> new Box[SExp](Some(SFunc(first.params, first.body, env)))))
             }
           }
 
           def replLoop(line: String, replEnv: Env): Unit = {
             try {
+              if(line.equals("exit")) {
+                out.println()
+                System.exit(0)
+              }
               val sexp = parseSExp("(" + line + ")")
               val prog = parseProgram(sexp)
               val res = interpProgram(prog, replEnv)
