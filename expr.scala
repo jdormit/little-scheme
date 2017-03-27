@@ -59,7 +59,7 @@ package object expr {
 
   def parseLet(defs: SExp, body: SExp, vars: List[Var]) : Let =
     defs match {
-      case SNil => Let(vars.reverse, parseExp(body))
+      case SNil => Let(vars, parseExp(body))
       case SCons(first, rest) => first match {
         case SList(SSymbol(id), exp) => parseLet(rest, body, Var(id, parseExp(exp)) :: vars)
       }
