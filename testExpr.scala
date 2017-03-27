@@ -4,28 +4,28 @@ import expr._
 object testExpr {
   def main(args: Array[String]): Unit = {
     // Arithmetic tests
-    val arithEx1 = parseExp(parseSExp("(* (+ 5 2) 1)"))
-    assert(interpExp(arithEx1, Map()) == SInt(7))
+    val arithEx1 = parseProgram(parseSExp("((* (+ 5 2) 1))"))
+    assert(interpProgram(arithEx1, Map()) == SInt(7))
 
-    val arithEx2 = parseExp(parseSExp("(/ (- 5 1) 2)"))
-    assert(interpExp(arithEx2, Map()) == SInt(2))
+    val arithEx2 = parseProgram(parseSExp("((/ (- 5 1) 2))"))
+    assert(interpProgram(arithEx2, Map()) == SInt(2))
 
     // Let tests
-    val letEx1 = parseExp(parseSExp(
-      """(let ((x 5))
-       (+ x 7))"""))
-    assert(interpExp(letEx1, Map()) == SInt(12))
+    val letEx1 = parseProgram(parseSExp(
+      """((let ((x 5))
+       (+ x 7)))"""))
+    assert(interpProgram(letEx1, Map()) == SInt(12))
 
-    val letEx2 = parseExp(parseSExp(
-      """(let ((x (+ 5 6)))
-       (+ x 7))"""))
-    assert(interpExp(letEx2, Map()) == SInt(18))
+    val letEx2 = parseProgram(parseSExp(
+      """((let ((x (+ 5 6)))
+       (+ x 7)))"""))
+    assert(interpProgram(letEx2, Map()) == SInt(18))
 
-    val letEx3 = parseExp(parseSExp(
-      """(let ((x (let ((y 1))
+    val letEx3 = parseProgram(parseSExp(
+      """((let ((x (let ((y 1))
                  (+ y 2))))
-        (+ x 3))"""))
-    assert(interpExp(letEx3, Map()) == SInt(6))
+        (+ x 3)))"""))
+    assert(interpProgram(letEx3, Map()) == SInt(6))
 
     // Program parsing tests. We'll represent a program
     // as a sequence of defintions, followed by a main
@@ -39,7 +39,7 @@ object testExpr {
 
     assert(progEx1 ==
       Program(List(
-        Def("square", List("n"), Multiply(Ref("n"), Ref("n")))
+        Def("square", List("n"), Call(Ref("*"), List(Ref("n"), Ref("n"))))
       ),
         Call(Ref("square"), List(Literal(5))))
     )
@@ -57,8 +57,8 @@ object testExpr {
 
     assert(progEx2 ==
       Program(List(
-        Def("square", List("n"), Multiply(Ref("n"), Ref("n"))),
-        Def("cube", List("n"), Multiply(Ref("n"), Call(Ref("square"), List(Ref("n")))))
+        Def("square", List("n"), Call(Ref("*"), List(Ref("n"), Ref("n")))),
+        Def("cube", List("n"), Call(Ref("*"), List(Ref("n"), Call(Ref("square"), List(Ref("n"))))))
       ),
         Call(Ref("cube"), List(Literal(5))))
     )
@@ -74,7 +74,7 @@ object testExpr {
 
     assert(progEx3 ==
       Program(List(
-        Def("add", List("x", "y"), Add(Ref("x"), Ref("y")))
+        Def("add", List("x", "y"), Call(Ref("+"), List(Ref("x"), Ref("y"))))
       ),
         Call(Ref("add"), List(Literal(5), Literal(6))))
     )
@@ -93,7 +93,7 @@ object testExpr {
     assert(progEx4 ==
       Program(List(
         Def("two", List(), Literal(2))
-      ), Add(Call(Ref("two"), List()), Literal(1)))
+      ), Call(Ref("+"), List(Call(Ref("two"), List()), Literal(1))))
     )
 
     assert(interpProgram(progEx4, Map()) == SInt(3))
@@ -132,12 +132,13 @@ object testExpr {
           Def(
             "even?",
             List("n"),
-            If(EqualEh(Ref("n"), Literal(0)), True, Call(Ref("odd?"), List(Subtract(Ref("n"), Literal(1)))))
+            If(Call(Ref("equal?"), List(Ref("n"), Literal(0))), True, Call(Ref("odd?"), List(Call(Ref("-"), List(Ref("n"), Literal(1))))))
           ),
           Def(
             "odd?",
             List("n"),
-            If(EqualEh(Ref("n"), Literal(0)), False, Call(Ref("even?"), List(Subtract(Ref("n"), Literal(1)))))
+            If(
+              Call(Ref("equal?"), List(Ref("n"), Literal(0))), False, Call(Ref("even?"), List(Call(Ref("-"), List(Ref("n"), Literal(1))))))
           )
         ),
         Call(Ref("even?"), List(Literal(10)))
@@ -162,7 +163,7 @@ object testExpr {
           Def(
             "square",
             List("n"),
-            Multiply(Ref("n"), Ref("n"))
+            Call(Ref("*"), List(Ref("n"), Ref("n")))
           ),
           Def(
             "callFuncWith2",
@@ -197,13 +198,13 @@ object testExpr {
             "append",
             List("l", "s"),
             If(
-              NullEh(Ref("l")),
+              Call(Ref("null?"), List(Ref("l"))),
               Ref("s"),
-              Cons(
-                Car(Ref("l")),
+              Call(Ref("cons"),
+                List(Call(Ref("car"), List(Ref("l"))),
                 Call(
                   Ref("append"),
-                  List(Cdr(Ref("l")) , Ref("s"))
+                  List(Call(Ref("cdr"), List(Ref("l"))) , Ref("s")))
                 )
               )
             )
@@ -232,7 +233,7 @@ object testExpr {
       Program(
         List(),
         Let(
-          List(Var("f", Lambda(List("x", "y"), Add(Ref("x"), Ref("y"))))),
+          List(Var("f", Lambda(List("x", "y"), Call(Ref("+"), List(Ref("x"), Ref("y")))))),
           Call(Ref("f"), List(Literal(1), Literal(2)))
         )
       )
@@ -253,7 +254,7 @@ object testExpr {
     assert(progEx10 ==
       Program(
         List(
-          Def("myf", List("arg"), Add(Ref("arg"), Literal(1))),
+          Def("myf", List("arg"), Call(Ref("+"), List(Ref("arg"), Literal(1)))),
           Def("apply", List("f"), Call(Ref("f"), List(Literal(4))))
         ),
         Call(Ref("apply"), List(Ref("myf")))
