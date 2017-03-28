@@ -36,6 +36,10 @@ package object expr {
         SSymbol("let"),
         defs,
         body) => parseLet(defs, body, List(), List())
+      case SList(
+        SSymbol("let*"),
+        defs,
+        body) => parseLetStar(defs, body)
       case SList(SSymbol("quote"), exp) => Quote(exp)
       case SList(SSymbol("print"), exp) => Print(parseExp(exp))
       case SList(SSymbol("lambda"), params, body) => parseLambda(params, body, List())
@@ -62,6 +66,14 @@ package object expr {
       case SNil => Call(Lambda(ids, parseExp(body)), vals)
       case SCons(first, rest) => first match {
         case SList(SSymbol(id), exp) => parseLet(rest, body, id :: ids, parseExp(exp) :: vals)
+      }
+    }
+
+  def parseLetStar(defs: SExp, body: SExp) : Call =
+    defs match {
+      case SNil => Call(Lambda(List(), parseExp(body)), List())
+      case SCons(first, rest) => first match {
+        case SList(SSymbol(id), exp) => Call(Lambda(List(id), parseLetStar(rest, body)), List(parseExp(exp)))
       }
     }
 
