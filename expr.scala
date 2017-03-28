@@ -10,7 +10,6 @@ package object expr {
   sealed abstract class Exp
   case class Literal(v: Int) extends Exp
   case class Var(name: String, exp: Exp)
-  case class Let(vars: List[Var], body: Exp) extends Exp
   case class Ref(v: String) extends Exp
   case class Call(name: Exp, args: List[Exp]) extends Exp
   case class If(condition: Exp, lhs: Exp, rhs: Exp) extends Exp
@@ -36,7 +35,7 @@ package object expr {
       case SList(
         SSymbol("let"),
         defs,
-        body) => parseLet(defs, body, List())
+        body) => parseLet(defs, body, List(), List())
       case SList(SSymbol("quote"), exp) => Quote(exp)
       case SList(SSymbol("print"), exp) => Print(parseExp(exp))
       case SList(SSymbol("lambda"), params, body) => parseLambda(params, body, List())
@@ -58,11 +57,11 @@ package object expr {
       case SCons(first, rest) => parseCall(rest, id, parseExp(first) :: acc)
     }
 
-  def parseLet(defs: SExp, body: SExp, vars: List[Var]) : Let =
+  def parseLet(defs: SExp, body: SExp, ids: List[String], vals: List[Exp]) : Call =
     defs match {
-      case SNil => Let(vars, parseExp(body))
+      case SNil => Call(Lambda(ids, parseExp(body)), vals)
       case SCons(first, rest) => first match {
-        case SList(SSymbol(id), exp) => parseLet(rest, body, Var(id, parseExp(exp)) :: vars)
+        case SList(SSymbol(id), exp) => parseLet(rest, body, id :: ids, parseExp(exp) :: vals)
       }
     }
 
@@ -112,11 +111,6 @@ package object expr {
           case None => throw new RuntimeException("Unbound variable " + id)
           case Some(v) => v
         }
-      }
-      case Let(vars, body) => vars match {
-        case Nil => interpExp(body, env)
-        case first :: rest =>
-          interpExp(Let(rest, body), env + (first.name -> new Box(Some(interpExp(first.exp, env)))))
       }
       case Call(name, args) =>
         name match {
