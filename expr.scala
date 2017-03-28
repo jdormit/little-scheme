@@ -9,7 +9,6 @@ package object expr {
 
   sealed abstract class Exp
   case class Literal(v: Int) extends Exp
-  case class Var(name: String, exp: Exp)
   case class Ref(v: String) extends Exp
   case class Call(name: Exp, args: List[Exp]) extends Exp
   case class If(condition: Exp, lhs: Exp, rhs: Exp) extends Exp
