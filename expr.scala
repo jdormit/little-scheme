@@ -31,6 +31,7 @@ package object expr {
       case SFalse() => False
       case SSymbol("null") => Null
       case SList(SSymbol("if"), cond, l, r) => If(parseExp(cond), parseExp(l), parseExp(r))
+      case SList(SSymbol("and"), l, r) => If(parseExp(l), parseExp(r), False)
       case SSymbol(id) => Ref(id)
       case SList(
         SSymbol("let"),
