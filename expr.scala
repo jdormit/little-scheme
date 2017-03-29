@@ -72,7 +72,8 @@ package object expr {
     defs match {
       case SNil => Call(Lambda(List(), parseExp(body)), List())
       case SCons(first, rest) => first match {
-        case SList(SSymbol(id), exp) => Call(Lambda(List(id), parseLetStar(rest, body)), List(parseExp(exp)))
+        case SList(SSymbol(id), exp) =>
+          Call(Lambda(List(id), parseLetStar(rest, body)), List(parseExp(exp)))
       }
     }
 
