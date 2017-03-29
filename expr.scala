@@ -267,8 +267,7 @@ package object expr {
         )
     }
 
-  def interpProgram(p: Program, e: Env) : SExp = {
-    var env = Map(
+  val initialEnv = Map(
       "+" -> new Box[SExp](Some(Primitive("+"))),
       "-" -> new Box[SExp](Some(Primitive("-"))),
       "/" -> new Box[SExp](Some(Primitive("/"))),
@@ -283,7 +282,10 @@ package object expr {
       "equal?" -> new Box[SExp](Some(Primitive("equal?"))),
       "pair?" -> new Box[SExp](Some(Primitive("pair?"))),
       "null?" -> new Box[SExp](Some(Primitive("null?")))
-    ) ++ e
+    ) 
+
+  def interpProgram(p: Program, e: Env) : SExp = {
+    var env = initialEnv ++ e
     runProgram(p, defineFuncs(p, initFuncs(p, env)))
   }
 
