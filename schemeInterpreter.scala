@@ -66,7 +66,7 @@ object schemeInterpreter {
             }
           }
 
-          replLoop(reader.readLine(), Map())
+          replLoop(reader.readLine(), initialEnv)
 
         }
       }
