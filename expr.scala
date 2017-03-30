@@ -12,9 +12,6 @@ package object expr {
   case class Ref(v: String) extends Exp
   case class Call(name: Exp, args: List[Exp]) extends Exp
   case class If(condition: Exp, lhs: Exp, rhs: Exp) extends Exp
-  case object True extends Exp
-  case object False extends Exp
-  case object Null extends Exp
   case class Quote(exp: SExp) extends Exp
   case class Lambda(params: List[String], body: Exp) extends Exp
   case class Print(exp: Exp) extends Exp
@@ -25,11 +22,11 @@ package object expr {
   def parseExp(e: SExp) : Exp =
     e match {
       case SInt(v) => Literal(v)
-      case STrue() => True
-      case SFalse() => False
-      case SSymbol("null") => Null
+      case STrue() => Quote(STrue())
+      case SFalse() => Quote(SFalse())
+      case SSymbol("null") => Quote(SNil)
       case SList(SSymbol("if"), cond, l, r) => If(parseExp(cond), parseExp(l), parseExp(r))
-      case SList(SSymbol("and"), l, r) => If(parseExp(l), parseExp(r), False)
+      case SList(SSymbol("and"), l, r) => If(parseExp(l), parseExp(r), Quote(SFalse()))
       case SSymbol(id) => Ref(id)
       case SList(
         SSymbol("let"),
@@ -102,15 +99,12 @@ package object expr {
         case _ => throw new IllegalArgumentException("Not a valid program: " + e)
       }
       // The program's expression could be empty
-      case SNil => Program(defs.reverse, Null)
+      case SNil => Program(defs.reverse, Quote(SNil))
     }
 
   def interpExp(e: Exp, env: Env) : SExp =
     e match {
       case Literal(v) => SInt(v)
-      case True => STrue()
-      case False => SFalse()
-      case Null => SNil
       case Quote(sexp) => sexp
       case If(condition, l, r) => interpExp(condition, env) match {
         case STrue() => interpExp(l, env)
