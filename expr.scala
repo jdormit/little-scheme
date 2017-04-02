@@ -82,7 +82,7 @@ package object expr {
 
   def parseProgram(e: SExp) : Program = parseProgramHelper(e, List())
 
-  def parseProgramHelper(e: SExp, defs: List[Def]) : Program =
+  def parseProgramHelper(e: SExp, defs: List[Def]) : Program = 
     e match {
       case SCons(first, rest) => first match {
         case SList(
@@ -95,11 +95,12 @@ package object expr {
           SList(SSymbol(name)),
           body
         ) => parseProgramHelper(rest, parseDefine(name, SNil, body, List()) :: defs)
-        case exp: SCons => Program(defs.reverse, parseExp(exp))
+        case exp: SExp => Program(defs.reverse, parseExp(exp))
         case _ => throw new IllegalArgumentException("Not a valid program: " + e)
       }
       // The program's expression could be empty
       case SNil => Program(defs.reverse, Quote(SNil))
+      case _ => throw new IllegalArgumentException("Not a valid program: " + e)
     }
 
   def interpExp(e: Exp, env: Env) : SExp =
