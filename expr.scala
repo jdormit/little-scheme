@@ -28,8 +28,8 @@ package object expr {
       case SFalse() => Quote(SFalse())
       case SSymbol("null") => Quote(SNil)
       case SList(SSymbol("if"), cond, l, r) => If(parseExp(cond), parseExp(l), parseExp(r))
-      case SList(SSymbol("and"), l, r) => If(parseExp(l), parseExp(r), Quote(SFalse()))
-      case SSymbol(id) => Ref(id)
+        case SList(SSymbol("and"), l, r) => If(parseExp(l), parseExp(r), Quote(SFalse()))
+          case SSymbol(id) => Ref(id)
       case SList(
         SSymbol("let"),
         defs,
@@ -86,7 +86,7 @@ package object expr {
 
   def parseProgram(e: SExp) : Program = parseProgramHelper(e, List())
 
-  def parseProgramHelper(e: SExp, defs: List[Def]) : Program = 
+  def parseProgramHelper(e: SExp, defs: List[Def]) : Program =
     e match {
       case SCons(first, rest) => first match {
         case SList(
@@ -102,7 +102,7 @@ package object expr {
         case SList(SSymbol("define"),
           SSymbol(name),
           body
-          ) => parseProgramHelper(rest, parseDefineVar(name, body) :: defs)
+        ) => parseProgramHelper(rest, parseDefineVar(name, body) :: defs)
         case exp: SExp => Program(defs.reverse, parseExp(exp))
         case _ => throw new IllegalArgumentException("Not a valid program: " + e)
       }
@@ -135,7 +135,7 @@ package object expr {
               case None => throw new RuntimeException("Undefined function " + name)
               case Some(SFunc(params, body, closure)) =>
                 interpExp(body, mapArgsToEnv(params zip args, closure, env))
-              case Some(Primitive(operation)) => 
+              case Some(Primitive(operation)) =>
                 operation match{
                   case "+" =>
                     args.map(e => interpExp(e, env)) match {
@@ -223,7 +223,7 @@ package object expr {
             case SFunc(params, body, closure) =>
               interpExp(body, mapArgsToEnv(params zip args, closure, env))
             case _ => throw new RuntimeException(exp + " is not a valid function id")
-          } 
+          }
         }
       case Lambda(params, body) => SFunc(params, body, env)
       case Print(exp) => {
@@ -258,9 +258,9 @@ package object expr {
     }
 
   def defineFuncs(p: Program, env: Env) : Env = {
-    p.defs.foreach { defItem => 
+    p.defs.foreach { defItem =>
       defItem match {
-        case FuncDef(name, params, body) => 
+        case FuncDef(name, params, body) =>
           env.get(name).get.contents = Some(SFunc(params, body, env))
         case VarDef(name, body) => env.get(name).get.contents = Some(interpExp(body, env))
       }
@@ -286,27 +286,27 @@ package object expr {
     }
 
   val initialEnv = Map(
-      "+" -> new Box[SExp](Some(Primitive("+"))),
-      "-" -> new Box[SExp](Some(Primitive("-"))),
-      "/" -> new Box[SExp](Some(Primitive("/"))),
-      "*" -> new Box[SExp](Some(Primitive("*"))),
-      ">" -> new Box[SExp](Some(Primitive(">"))),
-      "<" -> new Box[SExp](Some(Primitive("<"))),
-      ">=" -> new Box[SExp](Some(Primitive(">="))),
-      "<=" -> new Box[SExp](Some(Primitive("<="))),
-      "cons" -> new Box[SExp](Some(Primitive("cons"))),
-      "car" -> new Box[SExp](Some(Primitive("car"))),
-      "cdr" -> new Box[SExp](Some(Primitive("cdr"))),
-      "equal?" -> new Box[SExp](Some(Primitive("equal?"))),
-      "pair?" -> new Box[SExp](Some(Primitive("pair?"))),
-      "null?" -> new Box[SExp](Some(Primitive("null?")))
-    ) 
+    "+" -> new Box[SExp](Some(Primitive("+"))),
+    "-" -> new Box[SExp](Some(Primitive("-"))),
+    "/" -> new Box[SExp](Some(Primitive("/"))),
+    "*" -> new Box[SExp](Some(Primitive("*"))),
+    ">" -> new Box[SExp](Some(Primitive(">"))),
+    "<" -> new Box[SExp](Some(Primitive("<"))),
+    ">=" -> new Box[SExp](Some(Primitive(">="))),
+    "<=" -> new Box[SExp](Some(Primitive("<="))),
+    "cons" -> new Box[SExp](Some(Primitive("cons"))),
+    "car" -> new Box[SExp](Some(Primitive("car"))),
+    "cdr" -> new Box[SExp](Some(Primitive("cdr"))),
+    "equal?" -> new Box[SExp](Some(Primitive("equal?"))),
+    "pair?" -> new Box[SExp](Some(Primitive("pair?"))),
+    "null?" -> new Box[SExp](Some(Primitive("null?")))
+  )
 
   def interpProgram(p: Program, e: Env) : SExp = {
     var env = initialEnv ++ e
     runProgram(p, defineFuncs(p, initFuncs(p, env)))
   }
 
-  def evalProgram(s: String) : SExp = 
+  def evalProgram(s: String) : SExp =
     interpProgram(parseProgram(parseSExp(s)), Map())
 }
