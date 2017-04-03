@@ -5,6 +5,7 @@ import java.io._
 import java.nio.file.{Paths, Files}
 import java.util.Scanner
 import jline.console.ConsoleReader
+import jline.console.history.FileHistory
 
 object schemeInterpreter {
   def main(args: Array[String]): Unit = {
@@ -28,8 +29,12 @@ object schemeInterpreter {
           println("All ye who enter here beware")
           println("")
 
-          val reader = new ConsoleReader();
-          reader.setPrompt("> ");
+          val historyFile = new File(System.getProperty("user.home"), ".little-scheme.history")
+          val history = new FileHistory(historyFile)
+
+          val reader = new ConsoleReader()
+          reader.setPrompt("> ")
+          reader.setHistory(history)
 
           var line = ""
           val out = new PrintWriter(reader.getOutput());
@@ -51,6 +56,7 @@ object schemeInterpreter {
           }
 
           def replLoop(line: String, replEnv: Env): Unit = {
+            reader.getHistory.asInstanceOf[FileHistory].flush()
             try {
               if(line.equals("exit")) {
                 out.println()
