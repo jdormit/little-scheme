@@ -238,7 +238,6 @@ package object expr {
       case _ => throw new RuntimeException("Unknown type")
     }
 
-  // TODO inline this to a foldLeft above
   def mapArgsToEnv(paramToArgs: List[(String, Exp)], acc: Env, env: Env) : Env =
     paramToArgs match {
       case Nil => acc
