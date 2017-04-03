@@ -16,7 +16,9 @@ package object expr {
   case class Lambda(params: List[String], body: Exp) extends Exp
   case class Print(exp: Exp) extends Exp
 
-  case class Def(name: String, params: List[String], body: Exp)
+  sealed abstract class Def
+  case class FuncDef(name: String, params: List[String], body: Exp) extends Def
+  case class VarDef(name: String, body: Exp) extends Def
   case class Program(defs: List[Def], exp: Exp)
 
   def parseExp(e: SExp) : Exp =
@@ -74,11 +76,13 @@ package object expr {
       }
     }
 
-  def parseDefine(name: String, params: SExp, body: SExp, acc: List[String]) : Def =
+  def parseDefineFunc(name: String, params: SExp, body: SExp, acc: List[String]) : FuncDef =
     params match {
-      case SNil => Def(name, acc.reverse, parseExp(body))
-      case SCons(SSymbol(id), rest) => parseDefine(name, rest, body, id :: acc)
+      case SNil => FuncDef(name, acc.reverse, parseExp(body))
+      case SCons(SSymbol(id), rest) => parseDefineFunc(name, rest, body, id :: acc)
     }
+
+  def parseDefineVar(name: String, body: SExp) : VarDef = VarDef(name, parseExp(body))
 
   def parseProgram(e: SExp) : Program = parseProgramHelper(e, List())
 
@@ -89,12 +93,16 @@ package object expr {
           SSymbol("define"),
           SCons(SSymbol(name), params),
           body
-        ) => parseProgramHelper(rest, parseDefine(name, params, body, List()) :: defs)
+        ) => parseProgramHelper(rest, parseDefineFunc(name, params, body, List()) :: defs)
         case SList(
           SSymbol("define"),
           SList(SSymbol(name)),
           body
-        ) => parseProgramHelper(rest, parseDefine(name, SNil, body, List()) :: defs)
+        ) => parseProgramHelper(rest, parseDefineFunc(name, SNil, body, List()) :: defs)
+        case SList(SSymbol("define"),
+          SSymbol(name),
+          body
+          ) => parseProgramHelper(rest, parseDefineVar(name, body) :: defs)
         case exp: SExp => Program(defs.reverse, parseExp(exp))
         case _ => throw new IllegalArgumentException("Not a valid program: " + e)
       }
@@ -243,16 +251,18 @@ package object expr {
   def initFuncs(p: Program, env: Env) : Env =
     p.defs match {
       case Nil => env
-      case first :: rest => initFuncs(
-        Program(rest, p.exp),
-        env + (first.name -> new Box()))
+      case first :: rest => first match {
+        case FuncDef(name, _, _) => initFuncs(Program(rest, p.exp), env + (name -> new Box()))
+        case VarDef(name, _) => initFuncs(Program(rest, p.exp), env + (name -> new Box()))
+      }
     }
 
   def defineFuncs(p: Program, env: Env) : Env = {
-    p.defs.foreach { defItem =>
-      env.get(defItem.name) match {
-        case None => throw new RuntimeException("This shouldn't happen")
-        case Some(v) => v.contents = Some(SFunc(defItem.params, defItem.body, env))
+    p.defs.foreach { defItem => 
+      defItem match {
+        case FuncDef(name, params, body) => 
+          env.get(name).get.contents = Some(SFunc(params, body, env))
+        case VarDef(name, body) => env.get(name).get.contents = Some(interpExp(body, env))
       }
     }
     env
@@ -261,11 +271,18 @@ package object expr {
   def runProgram(p: Program, env: Env) : SExp =
     p.defs match {
       case Nil => interpExp(p.exp, env)
-      case first :: rest =>
-        runProgram(
-          Program(rest, p.exp),
-          env + (first.name -> new Box(Some(SFunc(first.params, first.body, env))))
-        )
+      case first :: rest => first match {
+        case FuncDef(name, params, body) =>
+          runProgram(
+            Program(rest, p.exp),
+            env + (name -> new Box(Some(SFunc(params, body, env))))
+          )
+        case VarDef(name, body) =>
+          runProgram(
+            Program(rest, p.exp),
+            env + (name -> new Box(Some(interpExp(body, env))))
+          )
+      }
     }
 
   val initialEnv = Map(

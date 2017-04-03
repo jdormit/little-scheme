@@ -39,9 +39,14 @@ object schemeInterpreter {
               case Nil => {
                 env
               }
-              case first :: rest => appendProgramToEnv(
-                Program(rest, p.exp),
-                env + (first.name -> new Box[SExp](Some(SFunc(first.params, first.body, env)))))
+              case first :: rest => first match {
+                case FuncDef(name, params, body) => appendProgramToEnv(
+                  Program(rest, p.exp),
+                  env + (name -> new Box[SExp](Some(SFunc(params, body, env)))))
+                case VarDef(name, body) => appendProgramToEnv(
+                  Program(rest, p.exp),
+                  env + (name -> new Box[SExp](Some(interpExp(body, env)))))
+              }
             }
           }
 
