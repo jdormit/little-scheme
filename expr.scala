@@ -107,8 +107,8 @@ package object expr {
         case _ => throw new IllegalArgumentException("Not a valid program: " + e)
       }
       // The program's expression could be empty
-      case SNil => Program(defs.reverse, Quote(SNil))
-      case _ => throw new IllegalArgumentException("Not a valid program: " + e)
+        case SNil => Program(defs.reverse, Quote(SNil))
+        case _ => throw new IllegalArgumentException("Not a valid program: " + e)
     }
 
   def interpExp(e: Exp, env: Env) : SExp =
@@ -120,117 +120,117 @@ package object expr {
         case SFalse() => interpExp(r, env)
         case _ => interpExp(l, env)
       }
-      case Ref(id) => env.get(id) match {
-        case None => throw new RuntimeException("Unbound variable " + id)
-        case Some(v) => v.contents match {
+        case Ref(id) => env.get(id) match {
           case None => throw new RuntimeException("Unbound variable " + id)
-          case Some(v) => v
+          case Some(v) => v.contents match {
+            case None => throw new RuntimeException("Unbound variable " + id)
+            case Some(v) => v
+          }
         }
-      }
-      case Call(name, args) =>
-        name match {
-          case Ref(name) => env.get(name) match {
-            case None => throw new RuntimeException("Undefined function " + name)
-            case Some(v) => v.contents match {
-              case None => throw new RuntimeException("Undefined function " + name)
-              case Some(SFunc(params, body, closure)) =>
-                interpExp(body, mapArgsToEnv(params zip args, closure, env))
-              case Some(Primitive(operation)) => 
-                operation match{
-                  case "+" =>
-                    args.map(e => interpExp(e, env)) match {
-                      case List(SInt(val1), SInt(val2)) => SInt(val1 + val2)
-                      case _ => throw new UnsupportedOperationException("Unsupported addition operation")
-                    }
-                  case "-" =>
-                    args.map(e => interpExp(e, env)) match {
-                      case List(SInt(val1), SInt(val2)) => SInt(val1 - val2)
-                      case _ => throw new UnsupportedOperationException("Unsupported subtraction operation")
-                    }
-                  case "/" =>
-                    args.map(e => interpExp(e, env)) match {
-                      case List(SInt(val1), SInt(val2)) => SInt(val1 / val2)
-                      case _ => throw new UnsupportedOperationException("Unsupported division operation")
-                    }
-                  case "*" =>
-                    args.map(e => interpExp(e, env)) match {
-                      case List(SInt(val1), SInt(val2)) => SInt(val1 * val2)
-                      case _ => throw new UnsupportedOperationException("Unsupported multiplication operation")
-                    }
-                  case ">" =>
-                    args.map(e => interpExp(e, env)) match {
-                      case List(SInt(val1), SInt(val2)) => if (val1 > val2) STrue() else SFalse()
-                      case _ => throw new UnsupportedOperationException("Unsupported greater than operation")
-                    }
-                  case "<" =>
-                    args.map(e => interpExp(e, env)) match {
-                      case List(SInt(val1), SInt(val2)) => if (val1 < val2) STrue() else SFalse()
-                      case _ => throw new UnsupportedOperationException("Unsupported less than operation")
-                    }
-                  case ">=" =>
-                    args.map(e => interpExp(e, env)) match {
-                      case List(SInt(val1), SInt(val2)) => if (val1 >= val2) STrue() else SFalse()
-                      case _ => throw new UnsupportedOperationException("Unsupported greater than or equal to operation")
-                    }
-                  case "<=" =>
-                    args.map(e => interpExp(e, env)) match {
-                      case List(SInt(val1), SInt(val2)) => if (val1 <= val2) STrue() else SFalse()
-                      case _ => throw new UnsupportedOperationException("Unsupported less than or equal to operation")
-                    }
-                  case "cons" =>
-                    args.map(e => interpExp(e, env)) match {
-                      case List(head: SExp, tail: SExp) => SCons(head, tail)
-                      case _ => throw new UnsupportedOperationException("Unsupported cons opertaion")
-                    }
-                  case "car" =>
-                    args.map(e => interpExp(e, env)) match {
-                      case List(SCons(head, tail)) => head
-                      case List(SNil) => SNil
-                      case _ => throw new UnsupportedOperationException("Unsupported car operation")
-                    }
-                  case "cdr" =>
-                    args.map(e => interpExp(e, env)) match {
-                      case List(SCons(head, tail)) => tail
-                      case List(SNil) => SNil
-                      case _ => throw new UnsupportedOperationException("Unsupported cdr operation")
-                    }
-                  case "equal?" =>
-                    args.map(e => interpExp(e, env)) match {
-                      case List(l: SFunc, r: SFunc) => throw new RuntimeException("Cannot compare function")
-                      case List(l: Primitive, r: Primitive) => throw new RuntimeException("Cannot compare primitives")
-                      case List(l: SExp, r: SExp) => if (l == r) STrue() else SFalse()
-                      case _ => throw new RuntimeException("Unsupported comparison")
-                    }
-                  case "pair?" =>
-                    args.map(e => interpExp(e, env)) match {
-                      case List(SCons(head, tail)) => STrue()
-                      case _ => SFalse()
-                    }
-                  case "null?" =>
-                    args.map(e => interpExp(e, env)) match {
-                      case List(SNil) => STrue()
-                      case _ => SFalse()
-                    }
+            case Call(name, args) =>
+              name match {
+                case Ref(name) => env.get(name) match {
+                  case None => throw new RuntimeException("Undefined function " + name)
+                  case Some(v) => v.contents match {
+                    case None => throw new RuntimeException("Undefined function " + name)
+                    case Some(SFunc(params, body, closure)) =>
+                      interpExp(body, mapArgsToEnv(params zip args, closure, env))
+                    case Some(Primitive(operation)) => 
+                      operation match{
+                        case "+" =>
+                          args.map(e => interpExp(e, env)) match {
+                            case List(SInt(val1), SInt(val2)) => SInt(val1 + val2)
+                            case _ => throw new UnsupportedOperationException("Unsupported addition operation")
+                          }
+                            case "-" =>
+                              args.map(e => interpExp(e, env)) match {
+                                case List(SInt(val1), SInt(val2)) => SInt(val1 - val2)
+                                case _ => throw new UnsupportedOperationException("Unsupported subtraction operation")
+                              }
+                                case "/" =>
+                                  args.map(e => interpExp(e, env)) match {
+                                    case List(SInt(val1), SInt(val2)) => SInt(val1 / val2)
+                                    case _ => throw new UnsupportedOperationException("Unsupported division operation")
+                                  }
+                                    case "*" =>
+                                      args.map(e => interpExp(e, env)) match {
+                                        case List(SInt(val1), SInt(val2)) => SInt(val1 * val2)
+                                        case _ => throw new UnsupportedOperationException("Unsupported multiplication operation")
+                                      }
+                                        case ">" =>
+                                          args.map(e => interpExp(e, env)) match {
+                                            case List(SInt(val1), SInt(val2)) => if (val1 > val2) STrue() else SFalse()
+                                            case _ => throw new UnsupportedOperationException("Unsupported greater than operation")
+                                          }
+                                            case "<" =>
+                                              args.map(e => interpExp(e, env)) match {
+                                                case List(SInt(val1), SInt(val2)) => if (val1 < val2) STrue() else SFalse()
+                                                case _ => throw new UnsupportedOperationException("Unsupported less than operation")
+                                              }
+                                                case ">=" =>
+                                                  args.map(e => interpExp(e, env)) match {
+                                                    case List(SInt(val1), SInt(val2)) => if (val1 >= val2) STrue() else SFalse()
+                                                    case _ => throw new UnsupportedOperationException("Unsupported greater than or equal to operation")
+                                                  }
+                                                    case "<=" =>
+                                                      args.map(e => interpExp(e, env)) match {
+                                                        case List(SInt(val1), SInt(val2)) => if (val1 <= val2) STrue() else SFalse()
+                                                        case _ => throw new UnsupportedOperationException("Unsupported less than or equal to operation")
+                                                      }
+                                                        case "cons" =>
+                                                          args.map(e => interpExp(e, env)) match {
+                                                            case List(head: SExp, tail: SExp) => SCons(head, tail)
+                                                            case _ => throw new UnsupportedOperationException("Unsupported cons opertaion")
+                                                          }
+                                                            case "car" =>
+                                                              args.map(e => interpExp(e, env)) match {
+                                                                case List(SCons(head, tail)) => head
+                                                                case List(SNil) => SNil
+                                                                case _ => throw new UnsupportedOperationException("Unsupported car operation")
+                                                              }
+                                                                case "cdr" =>
+                                                                  args.map(e => interpExp(e, env)) match {
+                                                                    case List(SCons(head, tail)) => tail
+                                                                    case List(SNil) => SNil
+                                                                    case _ => throw new UnsupportedOperationException("Unsupported cdr operation")
+                                                                  }
+                                                                    case "equal?" =>
+                                                                      args.map(e => interpExp(e, env)) match {
+                                                                        case List(l: SFunc, r: SFunc) => throw new RuntimeException("Cannot compare function")
+                                                                        case List(l: Primitive, r: Primitive) => throw new RuntimeException("Cannot compare primitives")
+                                                                        case List(l: SExp, r: SExp) => if (l == r) STrue() else SFalse()
+                                                                        case _ => throw new RuntimeException("Unsupported comparison")
+                                                                      }
+                                                                        case "pair?" =>
+                                                                          args.map(e => interpExp(e, env)) match {
+                                                                            case List(SCons(head, tail)) => STrue()
+                                                                            case _ => SFalse()
+                                                                          }
+                                                                            case "null?" =>
+                                                                              args.map(e => interpExp(e, env)) match {
+                                                                                case List(SNil) => STrue()
+                                                                                case _ => SFalse()
+                                                                              }
+                      }
+                                                                                case Some(v) => throw new RuntimeException(v + " is not a function")
+                  }
                 }
-              case Some(v) => throw new RuntimeException(v + " is not a function")
-            }
-          }
-          case Lambda(params, body) => interpExp(Lambda(params, body), env) match {
-            case SFunc(params, body, closure) =>
-              interpExp(body, mapArgsToEnv(params zip args, closure, env))
-          }
-          case exp: Exp => interpExp(exp, env) match {
-            case SFunc(params, body, closure) =>
-              interpExp(body, mapArgsToEnv(params zip args, closure, env))
-            case _ => throw new RuntimeException(exp + " is not a valid function id")
-          } 
-        }
-      case Lambda(params, body) => SFunc(params, body, env)
-      case Print(exp) => {
-        val res = interpExp(exp, env)
-        println(res)
-        SNil
-      }
+                                                                                case Lambda(params, body) => interpExp(Lambda(params, body), env) match {
+                                                                                  case SFunc(params, body, closure) =>
+                                                                                    interpExp(body, mapArgsToEnv(params zip args, closure, env))
+                                                                                }
+                                                                                  case exp: Exp => interpExp(exp, env) match {
+                                                                                    case SFunc(params, body, closure) =>
+                                                                                      interpExp(body, mapArgsToEnv(params zip args, closure, env))
+                                                                                    case _ => throw new RuntimeException(exp + " is not a valid function id")
+                                                                                  } 
+              }
+                                                                                    case Lambda(params, body) => SFunc(params, body, env)
+                                                                                    case Print(exp) => {
+                                                                                      val res = interpExp(exp, env)
+                                                                                      println(res)
+                                                                                      SNil
+                                                                                    }
     }
 
   def checkEqualEh(l: Exp, r: Exp, env: Env): SExp =
@@ -286,21 +286,21 @@ package object expr {
     }
 
   val initialEnv = Map(
-      "+" -> new Box[SExp](Some(Primitive("+"))),
-      "-" -> new Box[SExp](Some(Primitive("-"))),
-      "/" -> new Box[SExp](Some(Primitive("/"))),
-      "*" -> new Box[SExp](Some(Primitive("*"))),
-      ">" -> new Box[SExp](Some(Primitive(">"))),
-      "<" -> new Box[SExp](Some(Primitive("<"))),
-      ">=" -> new Box[SExp](Some(Primitive(">="))),
-      "<=" -> new Box[SExp](Some(Primitive("<="))),
-      "cons" -> new Box[SExp](Some(Primitive("cons"))),
-      "car" -> new Box[SExp](Some(Primitive("car"))),
-      "cdr" -> new Box[SExp](Some(Primitive("cdr"))),
-      "equal?" -> new Box[SExp](Some(Primitive("equal?"))),
-      "pair?" -> new Box[SExp](Some(Primitive("pair?"))),
-      "null?" -> new Box[SExp](Some(Primitive("null?")))
-    ) 
+    "+" -> new Box[SExp](Some(Primitive("+"))),
+    "-" -> new Box[SExp](Some(Primitive("-"))),
+    "/" -> new Box[SExp](Some(Primitive("/"))),
+    "*" -> new Box[SExp](Some(Primitive("*"))),
+    ">" -> new Box[SExp](Some(Primitive(">"))),
+    "<" -> new Box[SExp](Some(Primitive("<"))),
+    ">=" -> new Box[SExp](Some(Primitive(">="))),
+    "<=" -> new Box[SExp](Some(Primitive("<="))),
+    "cons" -> new Box[SExp](Some(Primitive("cons"))),
+    "car" -> new Box[SExp](Some(Primitive("car"))),
+    "cdr" -> new Box[SExp](Some(Primitive("cdr"))),
+    "equal?" -> new Box[SExp](Some(Primitive("equal?"))),
+    "pair?" -> new Box[SExp](Some(Primitive("pair?"))),
+    "null?" -> new Box[SExp](Some(Primitive("null?")))
+  ) 
 
   def interpProgram(p: Program, e: Env) : SExp = {
     var env = initialEnv ++ e
