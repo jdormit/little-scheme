@@ -45,8 +45,6 @@ package object expr {
       case _ => throw new IllegalArgumentException("Not a valid arithmetic expression: " + e)
     }
 
-  // TODO the following three functions could be abstracted to a higher order function
-
   def parseLambda(params: SExp, body: SExp, acc: List[String]): Lambda =
     params match {
       case SNil => Lambda(acc.reverse, parseExp(body))
